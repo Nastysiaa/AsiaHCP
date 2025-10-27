@@ -1,0 +1,27 @@
+{
+  "name": "webcam-auto-printer",
+  "version": "1.0.0",
+  "description": "Background webcam capture and auto-print on left click",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": ["electron", "webcam", "printer", "automation"],
+  "author": "Anastassia Masley",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4"
+  },
+  "dependencies": {
+    "electron-localshortcut": "^3.2.1"
+  },
+  "build": {
+    "appId": "com.webcam.autoprinter",
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": ["dmg", "zip"]
+    }
+  }
+}

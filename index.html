@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Webcam Auto-Printer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 20px;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      overflow-y: auto;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .card.flex-grow {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status {
+      text-align: center;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 15px;
+    }
+
+    .status.active {
+      background: rgba(52, 211, 153, 0.3);
+      border: 1px solid rgba(52, 211, 153, 0.5);
+    }
+
+    .status.error {
+      background: rgba(239, 68, 68, 0.3);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+    }
+
+    .status.warning {
+      background: rgba(251, 191, 36, 0.3);
+      border: 1px solid rgba(251, 191, 36, 0.5);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    select, input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      font-size: 14px;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    button.secondary {
+      background: rgba(255, 255, 255, 0.2);
+      margin-top: 8px;
+      font-size: 14px;
+      padding: 10px;
+    }
+
+    button.secondary:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    #pause-btn {
+      background: rgba(251, 191, 36, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    #pause-btn:hover {
+      background: rgba(251, 191, 36, 1);
+    }
+
+    #pause-btn.paused {
+      background: rgba(52, 211, 153, 0.8);
+    }
+
+    #pause-btn.paused:hover {
+      background: rgba(52, 211, 153, 1);
+    }
+
+    .video-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      min-height: 400px;
+    }
+
+    .video-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .stat-box {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .instructions {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .instructions ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .instructions li {
+      padding: 5px 0;
+    }
+
+    .instructions li:before {
+      content: "✓ ";
+      color: #4ade80;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+
+    canvas {
+      display: none;
+    }
+
+    .settings-section {
+      display: none;
+    }
+
+    .settings-section.active {
+      display: block;
+    }
+
+    .config-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .config-label {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .config-value {
+      color: #4ade80;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: right;
+      max-width: 60%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(52, 211, 153, 0.3);
+      border: 1px solid rgba(52, 211, 153, 0.5);
+    }
+
+    .badge.inactive {
+      background: rgba(239, 68, 68, 0.3);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 1200px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+      
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .manual-entry {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📸 Webcam Auto-Printer</h1>
+
+    <div class="status" id="status">Initializing...</div>
+
+    <!-- Main View -->
+    <div id="main-view" class="main-content">
+      <!-- Left Panel: Video -->
+      <div class="left-panel">
+        <div class="card flex-grow">
+          <label>Camera Preview (Click anywhere to capture & print):</label>
+          <div class="video-container">
+            <video id="video" class="video-preview" autoplay playsinline muted></video>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Controls & Info -->
+      <div class="right-panel">
+        <div class="card">
+          <label>Current Configuration:</label>
+          <div class="config-item">
+            <span class="config-label">Printer:</span>
+            <span class="config-value" id="current-printer">Not set</span>
+          </div>
+          <div class="config-item">
+            <span class="config-label">Camera:</span>
+            <span class="config-value" id="current-camera">Default</span>
+          </div>
+          <div class="config-item">
+            <span class="config-label">Status:</span>
+            <span class="badge" id="ready-badge">Not Ready</span>
+          </div>
+          <button id="change-settings-btn">⚙️ Change Settings</button>
+          <button id="pause-btn">
+            <span id="pause-icon">⏸</span>
+            <span id="pause-text">Pause</span>
+          </button>
+        </div>
+
+        <div class="card">
+          <div class="stats">
+            <div class="stat-box">
+              <div class="stat-number" id="capture-count">0</div>
+              <div class="stat-label">Photos Captured</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-number" id="print-count">0</div>
+              <div class="stat-label">Photos Printed</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="instructions">
+            <strong>How it works:</strong>
+            <ul>
+              <li>Configure printer and camera</li>
+              <li>Click anywhere to capture & print</li>
+              <li>Use Pause button to stop temporarily</li>
+              <li>Works in background while browsing</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings View -->
+    <div id="settings-view" class="settings-section">
+      <div class="settings-grid">
+        <div class="card">
+          <label for="printer-select">Select Printer:</label>
+          <select id="printer-select">
+            <option value="">Loading printers...</option>
+          </select>
+          <button class="secondary" id="refresh-printers-btn">🔄 Refresh Printer List</button>
+          
+          <div class="manual-entry">
+            <label for="manual-printer">Or Enter Printer Name Manually:</label>
+            <input 
+              type="text" 
+              id="manual-printer" 
+              placeholder="e.g., HP_LaserJet, Canon_MG3600"
+            />
+            <button class="secondary" id="use-manual-printer-btn">Use This Printer</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <label for="camera-select">Select Camera:</label>
+          <select id="camera-select">
+            <option value="">Loading cameras...</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 20px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <button id="apply-settings-btn">✓ Apply Settings</button>
+          <button class="secondary" id="cancel-settings-btn">✕ Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="canvas"></canvas>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
