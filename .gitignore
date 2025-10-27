@@ -1,0 +1,12 @@
+node_modules/
+dist/
+out/
+build/
+*.log
+.DS_Store
+*.png
+*.tmp
+npm-debug.log
+yarn-error.log
+.vscode/
+.idea/
