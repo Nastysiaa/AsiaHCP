@@ -7,6 +7,8 @@ const os = require('os');
 let mainWindow;
 let selectedPrinter = null;
 
+app.setName('AsiaHCP');
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -17,6 +19,7 @@ function createWindow() {
       enableRemoteModule: true
     },
     icon: path.join(__dirname, 'icon.png'),
+    title: 'AsiaHCP',
     resizable: true,
     minWidth: 1000,
     minHeight: 600

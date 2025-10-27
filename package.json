@@ -1,13 +1,13 @@
 {
-  "name": "webcam-auto-printer",
+  "name": "asiahcp",
   "version": "1.0.0",
-  "description": "Background webcam capture and auto-print on left click",
+  "description": "AsiaHCP - Background webcam capture and auto-print on left click",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder"
+    "dist": "electron-builder"
   },
-  "keywords": ["electron", "webcam", "printer", "automation"],
+  "keywords": ["electron", "webcam", "printer", "automation", "AsiaHCP"],
   "author": "Anastassia Masley",
   "license": "MIT",
   "devDependencies": {
@@ -18,10 +18,28 @@
     "electron-localshortcut": "^3.2.1"
   },
   "build": {
-    "appId": "com.webcam.autoprinter",
+    "appId": "com.asiahcp.app",
+    "productName": "AsiaHCP",
+    "directories": {
+      "buildResources": "assets"
+    },
+    "files": [
+      "main.js",
+      "index.html",
+      "assets/**"
+    ],
     "mac": {
       "category": "public.app-category.utilities",
-      "target": ["dmg", "zip"]
+      "target": ["dmg", "zip"],
+      "icon": "assets/icons/icon.icns"
+    },
+    "win": {
+      "target": ["nsis", "zip"],
+      "icon": "assets/icons/icon.ico"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "assets/icons/icon.png"
     }
   }
 }
