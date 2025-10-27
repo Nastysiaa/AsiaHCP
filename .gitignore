@@ -11,4 +11,4 @@ yarn-error.log
 .vscode/
 .idea/
 
-!**/*.dmg
+!dist/*.dmg
