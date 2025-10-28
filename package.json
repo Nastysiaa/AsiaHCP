@@ -26,6 +26,7 @@
     "files": [
       "main.js",
       "index.html",
+      "renderer.js",
       "assets/**"
     ],
     "mac": {
