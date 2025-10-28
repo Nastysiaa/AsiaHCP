@@ -20,7 +20,7 @@ Simple Electron app that captures webcam images and prints them on click.
    npm install
 
 4. Run the app in development:
-   npm start
+   npm run start
 
    The app will open a window showing the camera preview. Use "Change Settings" to select printer and camera. Click anywhere (except settings/pause) to capture and print.
 
@@ -29,7 +29,7 @@ Simple Electron app that captures webcam images and prints them on click.
 Build a macOS DMG / ZIP (requires electron-builder):
 1. Install dev dependencies (already listed in package.json).
 2. Run:
-   npm run build
+   npm run dist
 
 Note: For distribution on macOS you may need to codesign and notarize the app.
 
