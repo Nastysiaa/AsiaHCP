@@ -232,37 +232,46 @@ async function captureAndPrint() {
 
   try {
     updateStatus('📸 Capturing photo...', 'active');
-    
+
     // Scale to 35%
     const scale = 0.35;
-    const width = video.videoWidth * scale;
-    const height = video.videoHeight * scale;
-    
+    const width = Math.max(1, Math.round(video.videoWidth * scale));
+    const height = Math.max(1, Math.round(video.videoHeight * scale));
+
     canvas.width = width;
     canvas.height = height;
+
+    // Ensure a white background (avoid tinted prints from transparency)
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, width, height);
+
     ctx.drawImage(video, 0, 0, width, height);
-    
-    // Convert to black and white
+
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(video, 0, 0, width, height);
+
     const imageData = ctx.getImageData(0, 0, width, height);
     const data = imageData.data;
     for (let i = 0; i < data.length; i += 4) {
-      const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-      data[i] = gray;     // R
-      data[i + 1] = gray; // G
-      data[i + 2] = gray; // B
-      // data[i + 3] is alpha, leave unchanged
+      const gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+      data[i] = data[i + 1] = data[i + 2] = gray;
+      data[i + 3] = 255; // opaque
     }
     ctx.putImageData(imageData, 0, 0);
-    
+
     const imageDataUrl = canvas.toDataURL('image/png');
-    
+
     captureCount++;
     captureCountDiv.textContent = captureCount;
-    
+
     updateStatus('🖨 Sending to printer...', 'active');
-    
-    const result = await ipcRenderer.invoke('print-image-native', imageDataUrl);
-    
+
+    const result = await ipcRenderer.invoke('print-image-native', imageDataUrl, {
+      deviceName: selectedPrinter,
+      jobTitle: 'AsiaHCP Photo'
+    });
+
     if (result.success) {
       printCount++;
       printCountDiv.textContent = printCount;
@@ -275,9 +284,10 @@ async function captureAndPrint() {
   }
 }
 
-// Global click handler for capture with 30s cooldown
+
+// Global click handler for capture with 15s cooldown
 let lastClickTime = 0;
-const CLICK_COOLDOWN = 30000; // 30 seconds in milliseconds
+const CLICK_COOLDOWN = 15000; // 15 seconds in milliseconds
 
 document.addEventListener('click', (e) => {
   // Ignore clicks in settings view
