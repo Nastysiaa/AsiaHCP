@@ -233,9 +233,26 @@ async function captureAndPrint() {
   try {
     updateStatus('📸 Capturing photo...', 'active');
     
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // Scale to 35%
+    const scale = 0.35;
+    const width = video.videoWidth * scale;
+    const height = video.videoHeight * scale;
+    
+    canvas.width = width;
+    canvas.height = height;
+    ctx.drawImage(video, 0, 0, width, height);
+    
+    // Convert to black and white
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      data[i] = gray;     // R
+      data[i + 1] = gray; // G
+      data[i + 2] = gray; // B
+      // data[i + 3] is alpha, leave unchanged
+    }
+    ctx.putImageData(imageData, 0, 0);
     
     const imageDataUrl = canvas.toDataURL('image/png');
     
@@ -258,7 +275,10 @@ async function captureAndPrint() {
   }
 }
 
-// Global click handler for capture
+// Global click handler for capture with 30s cooldown
+let lastClickTime = 0;
+const CLICK_COOLDOWN = 30000; // 30 seconds in milliseconds
+
 document.addEventListener('click', (e) => {
   // Ignore clicks in settings view
   if (settingsView.style.display === 'block') {
@@ -271,9 +291,17 @@ document.addEventListener('click', (e) => {
     return;
   }
   
+  // Check cooldown
+  const now = Date.now();
+  if (now - lastClickTime < CLICK_COOLDOWN) {
+    console.log(`Please wait ${Math.ceil((CLICK_COOLDOWN - (now - lastClickTime)) / 1000)}s before next capture`);
+    return;
+  }
+  
   // Trigger capture on any other click
   if (selectedPrinter && videoStream && !isPaused) {
     captureAndPrint();
+    lastClickTime = now; // Update last click time only on successful capture
   }
 });
 
